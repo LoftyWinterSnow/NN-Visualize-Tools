@@ -1,0 +1,10 @@
+Content,
+ToolBar,
+#view {
+    background-color: transparent;
+}
+
+FolderListSettingCard FolderItem QLabel{
+    color: white;
+}
+

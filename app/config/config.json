@@ -1,0 +1,16 @@
+{
+    "MainWindow": {
+        "Dataset": "MNIST",
+        "DpiScale": "Auto",
+        "Language": "zh_CN",
+        "MicaEnabled": true,
+        "ModelFolder": [
+            "F:/m/MLP_learning/app/model"
+        ],
+        "UseCUDA": true
+    },
+    "QFluentWidgets": {
+        "ThemeColor": "#ff009faa",
+        "ThemeMode": "Dark"
+    }
+}
