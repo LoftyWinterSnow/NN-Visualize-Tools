@@ -15,3 +15,4 @@ NN Tools 是一个基于 PySide6 和 qfluentwidgets 的神经网络工具，旨�
 2. 确保已安装所有前置条件。
 3. 在项目根目录下运行 `GUI.py` 文件。
 
+第一次运行时需要下载MNIST数据集，请确保网络畅通
