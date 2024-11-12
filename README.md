@@ -18,14 +18,14 @@ NN Tools 是一个基于 PySide6 和 qfluentwidgets 的神经网络工具，旨�
 2. 确保已安装所有前置条件。
 
    ```bash
-   pip install -r requirement.txt
+   pip install -r requirements.txt
    ```
 3. 在项目根目录下运行 `GUI.py` 文件。
 
    ```bash
    python -u GUI.py
    ```
-   
+
 第一次运行时需要下载MNIST数据集，请确保网络畅通
 
 ## 功能预览
