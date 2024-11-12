@@ -3,6 +3,7 @@ from qfluentwidgets import (QConfig, ConfigItem, OptionsConfigItem, BoolValidato
                              FolderValidator, FolderListValidator)
 from enum import Enum
 import sys
+import os
 import torch
 
 CUDA_IS_AVAILABLE = torch.cuda.is_available()
@@ -49,7 +50,7 @@ class MyConfig(QConfig):
         "MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]), restart=True)
     language = OptionsConfigItem(
         "MainWindow", "Language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart=True)
-    modelFolder = ConfigItem("MainWindow", "ModelFolder", [rf"F:\m\MLP_learning\app\model"], FolderListValidator())
+    modelFolder = ConfigItem("MainWindow", "ModelFolder", [os.getcwd() + rf"\app\model"], FolderListValidator())
 
 
 cfg = MyConfig()
