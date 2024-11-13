@@ -1,12 +1,11 @@
 {
     "MainWindow": {
-        "Dataset": "MNIST",
+        "Dataset": "EMNIST-byclass",
         "DpiScale": "Auto",
         "Language": "zh_CN",
         "MicaEnabled": true,
-        "ModelFolder": [
-            "F:/m/MLP_learning/app/model"
-        ],
+        "Model": "model-EMNIST-byclass.pt",
+        "ModelFolder": "F:/m/MLP_learning/app/model",
         "UseCUDA": true
     },
     "QFluentWidgets": {
