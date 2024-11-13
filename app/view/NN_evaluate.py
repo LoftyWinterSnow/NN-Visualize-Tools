@@ -142,7 +142,7 @@ class NNEvaluate(Content):
         self._parent = parent
         self.modelsPth = filter(
             lambda x : x.endswith('.pt'),
-            next(os.walk(cfg.modelFolder.value[0]))[-1]
+            next(os.walk(cfg.modelFolder.value))[-1]
         )
         self.device = parent.device
         self.dataType = parent.dataType
@@ -203,7 +203,7 @@ class NNEvaluate(Content):
         qconfig.themeChanged.connect(self.changeChartTheme)
 
         self.modelChoose.currentIndexChanged.connect(
-            lambda : self._parent.setModel(cfg.modelFolder.value[0] + '/' +  self.modelChoose.currentText()))
+            lambda : self._parent.setModel(self.modelChoose.currentText()))
         
     def __initBarChart(self):
         #（1）创建图表和视图
@@ -242,7 +242,7 @@ class NNEvaluate(Content):
 
         axisY = QValueAxis()
         axisY.setTitleText(self.tr('Possibility'))
-        axisY.setRange(0, 1)
+        #axisY.setRange(0, 1)
         #axisY.setLabelsVisible(False)
         chart.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         bSeries.attachAxis(axisY)
@@ -272,6 +272,8 @@ class NNEvaluate(Content):
         cmap = plt.get_cmap('rainbow')
         self.model.eval()
         inputImg_ori = self.canvas.getPixmap()
+        # if "EMNIST" in self.dataset.name:
+        #     inputImg_ori.transpose(Image.FLIP_LEFT_RIGHT).rotate(90)
         inputImg = inputImg_ori.resize(self.dataset.inputShape[1:])
         inputImg = np.array(inputImg).reshape(self.dataset.inputShape) / 255.
         camMask = get_cam_mask(self.model.model, self.model.model[self.camLayer], 
@@ -285,7 +287,7 @@ class NNEvaluate(Content):
         # shapeSeq = [(28, 28), (14, 14), (14, 14), (7, 7), (7, 7), (3, 3)]
 
         maxHeight = self.dataset.inputShape[1] * 6
-        for i in range(6):
+        for i in range(len(self.shapeSeq)):
             showNum = int(maxHeight/self.shapeSeq[i][0])
             temp = list(self.model.model)[i](torch.as_tensor(temp).type(self.dataType))
             outputImg = temp.cpu().detach().numpy()
@@ -297,7 +299,8 @@ class NNEvaluate(Content):
 
         inpt = inputImg_ori.resize(self.dataset.inputShape[1:])
         inpt = np.array(inpt).reshape((1, *self.dataset.inputShape)) / 255.
-        self.outputList = nn.functional.softmax(self.model.model(torch.as_tensor(inpt).type(self.dataType)), dim=-1).cpu().detach().numpy().reshape((10,))
+        self.outputList = nn.functional.softmax(self.model.model(torch.as_tensor(inpt).type(self.dataType)), dim=-1).cpu().detach().numpy()[0]
+        #print(self.outputList)
         self.predicVal.setText(self.tr('Predict:  ') + f'{self.dataset.classes[np.argmax(self.outputList)]}')
         try:
             for i, val in enumerate(np.round(self.outputList, 2).tolist()):
@@ -312,6 +315,8 @@ class NNEvaluate(Content):
         img = self.dataset.trainData[np.random.randint(0, len(self.dataset.trainData)-1)][0].numpy()
         img = Image.fromarray((img.reshape(self.dataset.inputShape[1:])*255).astype(np.uint8))
         img = img.resize(self.canvas.size().toTuple())
+        # if 'EMNIST' in self.dataset.name:
+        #     img = img.rotate(-90).transpose(Image.FLIP_LEFT_RIGHT)
         #print(self.dataset.data[0][0].numpy().shape)
         self.canvas.importImage(img)
         #print(img)
@@ -333,6 +338,16 @@ class NNEvaluate(Content):
     def updateModel(self, model):
         self.model = model
         self.model.to(self.device)
+        featureMapLayers = self.model.featureMapLayer()
+        self.shapeSeq = [
+            tuple(featureMapLayers[layer]['output_shape'][2:]) for layer in featureMapLayers
+        ]
+        self.outputList = None
+        self.camLayer = self.model.lastConvLayer()
+        self.layerChoice.clear()
+        self.layerChoice.addItems([layer for layer in featureMapLayers])
+        self.layerChoice.setCurrentIndex(self.camLayer)
+
         self.setOutput()
         self.update()
 

@@ -9,6 +9,7 @@ from qfluentwidgets import (PushButton, ScrollArea, LineEdit, ToolButton, Fluent
 from qfluentwidgets import FluentIcon as FIF
 from app.common.NN import NN
 from app.view.content_widgets import Content
+from app.common.config import cfg
 from collections import OrderedDict
 import torch.nn as nn
 class LayerSetting(QWidget):
@@ -99,7 +100,6 @@ class LayerChoose(QWidget):
         self.pivot.setCurrentItem(widget.objectName())
 class AddLayer(MessageBoxBase):
     """ Custom message box """
-
     def __init__(self, parent=None):
         super().__init__(parent)
         # self.lineEdit = LineEdit()
@@ -116,7 +116,15 @@ class AddLayer(MessageBoxBase):
 
         # 设置对话框的最小宽
         self.widget.setMinimumWidth(350)
-
+class SaveModel(MessageBoxBase):
+    """ Custom message box """
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.lineEdit = LineEdit()
+        self.formLayout = QFormLayout()
+        #self.lineEdit.setValidator(QRegExpValidator(QRegExp('[0-9]*')))
+        self.formLayout.addRow(self.tr('Model Name'), self.lineEdit)
+        self.viewLayout.addLayout(self.formLayout)
 class ShowNNStructre(QFrame):
     def __init__(self, name, nnStructure, parent=None):
         super(ShowNNStructre, self).__init__(parent)
@@ -265,8 +273,10 @@ class NNConstruct(Content):
         self.dataType = parent.dataType
         self.dataset = parent.dataset
         self.inputShape = parent.dataset.inputShape
-        self.currentShape = parent.dataset.inputShape
         self.model : NN = parent.model
+        self.currentShape = self.model.outputShape
+        if self.currentShape is None:
+            self.currentShape = self.inputShape
         #self.layers = [i for i in self.nnStructure if 'ReLU' not in i]
         self.__initWidgets()
         self.__initLayout()
@@ -293,6 +303,7 @@ class NNConstruct(Content):
         self.addLayerBtn.clicked.connect(self.addLayer)
         self.newModelBtn.clicked.connect(self.newModel)
         self.trainBtn.clicked.connect(self.trainModel)
+        self.saveBtn.clicked.connect(self.saveModel)
         
 
     
@@ -341,4 +352,23 @@ class NNConstruct(Content):
         )
 
     def saveModel(self):
-        self.model.saveModel('./app/data/model3.pt')
+        self.SaveModel = SaveModel(parent=self)
+        if self.SaveModel.exec():
+            print('Yes button is pressed')
+            modelName = self.SaveModel.lineEdit.text()
+            self.model.saveModel(cfg.modelFolder.value + '/' + modelName + '-' + self.dataset.name + '.pt')
+        else:
+            print('Cancel button is pressed')
+        
+        #self.model.saveModel('./app/data/model3.pt')
+    
+    def updateModel(self, model):
+        self.model = model
+        self.model.to(self.device)
+        self.canvas.updateStructure(self.model.NNStructure)
+        self.update()
+
+    def updateDataset(self, dataset):
+        self.dataset = dataset
+        self.update()
+

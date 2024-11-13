@@ -1,7 +1,7 @@
 from app.common.config import *
 from PySide6.QtCore import Qt,QStandardPaths
 from PySide6.QtGui import QDesktopServices, QPainter, QPen, QColor, QBrush, QImage, QPixmap
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QFrame, QFormLayout, QGridLayout, QSizePolicy, QGraphicsView
+from PySide6.QtWidgets import QFileDialog, QVBoxLayout
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QBarSeries, QBarSet, QPieSeries, QPieSlice, QAbstractBarSeries, QBarCategoryAxis, QValueAxis, QChartView
 from qfluentwidgets import (ComboBoxSettingCard, SettingCardGroup, SwitchSettingCard, PushSettingCard, setThemeColor, 
                             toggleTheme, Theme, isDarkTheme, OptionsSettingCard, CustomColorSettingCard, FolderListSettingCard, setTheme, InfoBar)
@@ -34,13 +34,14 @@ class Settings(Content):
                 content= self.tr("Change the dataset for training"),
                 texts = ["MNIST", "EMNIST-digits", "EMNIST-letters", "EMNIST-balanced", "EMNIST-byclass", "EMNIST-bymerge", "EMNIST-mnist"]
         )
-        self.modelFolder = FolderListSettingCard(
-            configItem = cfg.modelFolder,
-            title = self.tr("Model folder"),
-            content = self.tr("Change the folder where models are saved"),
-            directory = rf"F:\m\MLP_learning\app\model",
 
+        self.modelFolder = PushSettingCard(
+            self.tr('Model folder'),
+            FIF.FOLDER,
+            self.tr("Change the folder where models are saved"),
+            cfg.get(cfg.modelFolder),
         )
+
         
         self.setTheme = OptionsSettingCard(
             configItem = cfg.themeMode,
@@ -104,6 +105,7 @@ class Settings(Content):
         self.useCUDA.checkedChanged.connect(signalBus.deviceChanged)
         self.dataset.comboBox.currentIndexChanged.connect(signalBus.datasetChanged)
         self.setLanguage.comboBox.currentIndexChanged.connect(signalBus.languageChanged)
+        self.modelFolder.clicked.connect(self.__onDownloadFolderCardClicked)
 
     def __showRestartTooltip(self):
         """ show restart tooltip """
@@ -114,6 +116,14 @@ class Settings(Content):
             parent=self
         )
 
+    def __onDownloadFolderCardClicked(self):
+        """ model folder card clicked slot """
+        folder = QFileDialog.getExistingDirectory(
+            self, self.tr("Choose folder"), "./")
+        if not folder or cfg.get(cfg.modelFolder) == folder:
+            return
+        cfg.set(cfg.modelFolder, folder)
+        self.modelFolder.setContent(folder)
         
 
 

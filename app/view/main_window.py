@@ -37,7 +37,7 @@ class MainWindow(FluentWindow):
 
     def __init__(self):
         super().__init__()
-        self.initWindow()
+        self.__initWindow()
         # create system theme listener
         # loop = QEventLoop(self)
         # QTimer.singleShot(3000, loop.quit)
@@ -53,7 +53,7 @@ class MainWindow(FluentWindow):
         self.dataType = torch.cuda.FloatTensor if cfg.useCUDA.value else torch.FloatTensor
         self.dataset = Datasets(cfg.dataset.value)
         self.model = NN(self.dataset.inputShape, self.device)
-        self.model.loadModel('./app/model/model.pt')
+        self.model.loadModel(cfg.modelFolder.value + '/' + cfg.model.value)
         self.NNConstructInterface = NNConstruct(self)
         self.NNEvaluateInterface = NNEvaluate(self)
         self.settingInterface = Settings(self)
@@ -61,30 +61,30 @@ class MainWindow(FluentWindow):
         # enable acrylic effect
         self.navigationInterface.setAcrylicEnabled(True)
 
-        self.connectSignalToSlot()
+        self.__connectSignalToSlot()
 
         # add items to navigation interface
-        self.initNavigation()
+        self.__initNavigation()
         self.splashScreen.finish()
 
         # start theme listener
         self.themeListener.start()
 
-    def connectSignalToSlot(self):
+    def __connectSignalToSlot(self):
         signalBus.micaEnableChanged.connect(self.setMicaEffectEnabled)
         signalBus.deviceChanged.connect(self.setDevice)
         signalBus.datasetChanged.connect(self.setDataset)
         signalBus.languageChanged.connect(self.setLanguage)
 
 
-    def initNavigation(self):
+    def __initNavigation(self):
         # add navigation items
         self.addSubInterface(self.NNConstructInterface, FIF.ALBUM, self.tr('NN Construst'))
         self.addSubInterface(self.NNEvaluateInterface, FIF.ALBUM, self.tr('NN Evaluate'))
         self.addSubInterface(self.settingInterface, FIF.SETTING, self.tr('Settings'))
 
         
-    def initWindow(self):
+    def __initWindow(self):
         self.resize(960, 780)
         self.setMinimumWidth(760)
         self.setWindowIcon(QIcon(':/GUI/images/logo.png'))
@@ -130,11 +130,16 @@ class MainWindow(FluentWindow):
     def setDataset(self):
         self.dataset = Datasets(cfg.dataset.value)
         self.NNEvaluateInterface.updateDataset(self.dataset)
+        self.NNConstructInterface.updateDataset(self.dataset)
+        print(self.dataset.classes)
+        print(len(self.dataset.classes))
 
     def setModel(self, modelPth):
         self.model = NN(self.dataset.inputShape, self.device)
-        self.model.loadModel(modelPth)
+        self.model.loadModel(cfg.modelFolder.value + '/' + modelPth)
+        cfg.set(cfg.model, modelPth)
         self.NNEvaluateInterface.updateModel(self.model)
+        self.NNConstructInterface.updateModel(self.model)
 
     def setLanguage(self):
         # self.translator.load(f':/GUI/i18n/GUI.{cfg.get(cfg.language).value.name()}.qm')

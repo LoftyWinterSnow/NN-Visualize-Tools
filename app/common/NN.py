@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from sympy import S
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -217,6 +218,14 @@ class NN:
                 layers[layer]['idx'] = i
         return layers
 
+    @property
+    def outputShape(self):
+        structure = self.NNStructure
+        if structure:
+            return structure[list(structure.keys())[-1]]['output_shape']
+        else:
+            return None
+
     def train(self, learning_rate : float, batch_size : int, num_epochs : int, train_dataset, test_dataset, criterion = nn.CrossEntropyLoss()):
         optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
@@ -244,29 +253,29 @@ class NN:
                     optimizer.step()
 
                     # 每100个step记录一次损失和准确率
-                    if (i+1) % 100 == 0:
-                        # 在测试集上计算准确率
-                        with torch.no_grad():
-                            correct = 0
-                            total = 0
-                            for images, labels in test_loader:
-                                # 将数据和标签移动到GPU
-                                images = images.to(self.device)
-                                labels = labels.to(self.device)
+                    # if (i+1) % 100 == 0:
+                    #     # 在测试集上计算准确率
+                    #     with torch.no_grad():
+                    #         correct = 0
+                    #         total = 0
+                    #         for images, labels in test_loader:
+                    #             # 将数据和标签移动到GPU
+                    #             images = images.to(self.device)
+                    #             labels = labels.to(self.device)
 
-                                outputs = self.model(images)
-                                _, predicted = torch.max(outputs.data, 1)
-                                total += labels.size(0)
-                                correct += (predicted == labels).sum().item()
+                    #             outputs = self.model(images)
+                    #             _, predicted = torch.max(outputs.data, 1)
+                    #             total += labels.size(0)
+                    #             correct += (predicted == labels).sum().item()
 
-                            test_accuracy = correct / total
-                            train_losses.append(loss.item())
-                            test_accuracies.append(test_accuracy)
+                    #         test_accuracy = correct / total
+                    #         train_losses.append(loss.item())
+                    #         test_accuracies.append(test_accuracy)
 
-                        # 计算训练时间
-                        elapsed_time = time.time() - start_time
+                    #     # 计算训练时间
+                    #     elapsed_time = time.time() - start_time
 
-                        t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
+                    #     t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
 
         # 保存模型
         #torch.save(model, './app/model/model.pt')
@@ -316,7 +325,11 @@ if __name__ == '__main__':
     
     # train_dataset = torchvision.datasets.MNIST(root='./app/data', train=True, transform=transform, download=True)
     # test_dataset = torchvision.datasets.MNIST(root='./app/data', train=False, transform=transform, download=True)
-    # model = NN((1, 28, 28), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    model = NN((1, 28, 28), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    data = Datasets('EMNIST-byclass')
+    model.loadModel('./app/model/model2.pt')
+    mask = get_cam_mask(model.model, model.model[3], data.trainData[0][0].reshape((1, 1, 28, 28)))
+    print(mask)
     # model.model = nn.Sequential(
     #         nn.Conv2d(1, 32, 5, stride=1, padding=2),
     #         nn.MaxPool2d(kernel_size=2),

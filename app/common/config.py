@@ -1,6 +1,6 @@
 from PySide6.QtCore import QLocale
 from qfluentwidgets import (QConfig, ConfigItem, OptionsConfigItem, BoolValidator, OptionsValidator, qconfig, ConfigSerializer,
-                             FolderValidator, FolderListValidator)
+                             FolderValidator, ConfigValidator)
 from enum import Enum
 import sys
 import os
@@ -50,7 +50,10 @@ class MyConfig(QConfig):
         "MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]), restart=True)
     language = OptionsConfigItem(
         "MainWindow", "Language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart=True)
-    modelFolder = ConfigItem("MainWindow", "ModelFolder", [os.getcwd() + rf"\app\model"], FolderListValidator())
+    modelFolder = ConfigItem("MainWindow", "ModelFolder", rf"/app/model", FolderValidator())
+
+    model = ConfigItem("MainWindow", "Model", 'model.pt')
+    # TODO: 增加没有找到任何模型时候的解决方案
 
 
 cfg = MyConfig()
