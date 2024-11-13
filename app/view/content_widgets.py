@@ -73,9 +73,31 @@ class WidgetCard(QWidget):
         #self.widget.show()
 
 
-    def addWidget(self, widget):
-        self.titleLayout.addWidget(widget, 0, Qt.AlignRight)
+    def addWidgets(self, widgets):
+        self.widgets = widgets
+        for widget in self.widgets:
+            if isinstance(widget, list):
+                tempLayout = QVBoxLayout() if self.layoutDir == "H" else QHBoxLayout()
+                tempLayout.setSpacing(self.gap)
+                for groupWiget in widget:
+                    tempLayout.addWidget(groupWiget)
+                self.topLayout.addLayout(tempLayout)
+            else:
+                widget.setParent(self.card)
+                self.topLayout.addWidget(widget)
+
         self.update()
+    
+    def addTools(self, widget):
+        self.topLayout.addWidget(widget)
+
+    def clear(self):
+        while self.topLayout.count():
+            item = self.topLayout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+
 class SeparatorWidget(QWidget):
     """ Seperator widget """
 

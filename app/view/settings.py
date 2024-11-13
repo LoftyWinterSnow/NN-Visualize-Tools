@@ -1,16 +1,42 @@
+from typing import Union
 from app.common.config import *
 from PySide6.QtCore import Qt,QStandardPaths
-from PySide6.QtGui import QDesktopServices, QPainter, QPen, QColor, QBrush, QImage, QPixmap
-from PySide6.QtWidgets import QFileDialog, QVBoxLayout
+from PySide6.QtGui import QDesktopServices, QPainter, QPen, QColor, QBrush, QImage, QPixmap, QIcon
+from PySide6.QtWidgets import QFileDialog, QVBoxLayout, QPushButton
 from PySide6.QtCharts import QChart, QChartView, QLineSeries, QBarSeries, QBarSet, QPieSeries, QPieSlice, QAbstractBarSeries, QBarCategoryAxis, QValueAxis, QChartView
-from qfluentwidgets import (ComboBoxSettingCard, SettingCardGroup, SwitchSettingCard, PushSettingCard, setThemeColor, 
-                            toggleTheme, Theme, isDarkTheme, OptionsSettingCard, CustomColorSettingCard, FolderListSettingCard, setTheme, InfoBar)
+from qfluentwidgets import (ComboBoxSettingCard, SettingCardGroup, SwitchSettingCard, PushSettingCard, setThemeColor, SettingCard, 
+                            toggleTheme, Theme, isDarkTheme, OptionsSettingCard, CustomColorSettingCard, TransparentToolButton, setTheme, InfoBar,
+                            FluentIconBase, Flyout, InfoBarIcon, FlyoutAnimationType, ConfigItem)
 from qfluentwidgets import FluentIcon as FIF
 
 from app.common.signal_bus import signalBus
 from app.view.content_widgets import Content
 from app.common.config import cfg, CUDA_IS_AVAILABLE
 from app.common.style_sheet import StyleSheet
+
+class DatasetInfoSettingCard(SettingCard):
+    def __init__(self, configItem : ConfigItem ,icon: Union[str, QIcon, FluentIconBase], title, content = None, parent=None):
+
+        super().__init__(icon, title, content, parent)
+        self.configItem = configItem
+        self.button = TransparentToolButton(FIF.INFO, self)
+        self.hBoxLayout.addWidget(self.button, 0, Qt.AlignRight)
+        self.hBoxLayout.addSpacing(16)
+        self.button.clicked.connect(self.showFlyout)
+        self.configItem.valueChanged.connect(lambda: self.setContent(self.configItem.value))
+        
+    def showFlyout(self):
+        Flyout.create(
+            icon=InfoBarIcon.SUCCESS,
+            title=self.configItem.value,
+            content="test",
+            target=self.button,
+            parent=self,
+            isClosable=True,
+            aniType=FlyoutAnimationType.SLIDE_LEFT
+        )
+        
+
 class Settings(Content):
     def __init__(self, parent=None):
         super(Settings, self).__init__(
@@ -27,14 +53,12 @@ class Settings(Content):
 
         )
         self.useCUDA.setEnabled(CUDA_IS_AVAILABLE)
-        self.dataset = ComboBoxSettingCard(
+        self.dataset = DatasetInfoSettingCard(
                 configItem = cfg.dataset,
                 icon = FIF.ALBUM,
                 title = self.tr("Dataset"),
-                content= self.tr("Change the dataset for training"),
-                texts = ["MNIST", "EMNIST-digits", "EMNIST-letters", "EMNIST-balanced", "EMNIST-byclass", "EMNIST-bymerge", "EMNIST-mnist"]
+                content = cfg.get(cfg.dataset)
         )
-
         self.modelFolder = PushSettingCard(
             self.tr('Model folder'),
             FIF.FOLDER,
@@ -103,7 +127,7 @@ class Settings(Content):
         self.setTheme.optionChanged.connect(lambda : setTheme(cfg.theme))
         self.setThemeColor.colorChanged.connect(lambda c: setThemeColor(c))
         self.useCUDA.checkedChanged.connect(signalBus.deviceChanged)
-        self.dataset.comboBox.currentIndexChanged.connect(signalBus.datasetChanged)
+        # self.dataset.comboBox.currentIndexChanged.connect(signalBus.datasetChanged)
         self.setLanguage.comboBox.currentIndexChanged.connect(signalBus.languageChanged)
         self.modelFolder.clicked.connect(self.__onDownloadFolderCardClicked)
 

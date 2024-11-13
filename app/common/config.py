@@ -3,7 +3,6 @@ from qfluentwidgets import (QConfig, ConfigItem, OptionsConfigItem, BoolValidato
                              FolderValidator, ConfigValidator)
 from enum import Enum
 import sys
-import os
 import torch
 
 CUDA_IS_AVAILABLE = torch.cuda.is_available()
@@ -42,7 +41,10 @@ class MyConfig(QConfig):
         "MainWindow", 
         "Dataset",
         "MNIST", 
-        OptionsValidator(["MNIST", "EMNIST-digits", "EMNIST-letters", "EMNIST-balanced", "EMNIST-byclass", "EMNIST-bymerge", "EMNIST-mnist"])
+        OptionsValidator([
+            "MNIST", 
+            "EMNIST-digits", "EMNIST-letters", "EMNIST-balanced", "EMNIST-byclass", "EMNIST-bymerge", "EMNIST-mnist",
+            'CIFAR10'])
         )
 
     micaEnabled = ConfigItem("MainWindow", "MicaEnabled", isWin11(), BoolValidator())

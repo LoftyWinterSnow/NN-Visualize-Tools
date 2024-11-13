@@ -1,10 +1,10 @@
 {
     "MainWindow": {
-        "Dataset": "EMNIST-byclass",
+        "Dataset": "CIFAR10",
         "DpiScale": "Auto",
         "Language": "zh_CN",
         "MicaEnabled": true,
-        "Model": "model-EMNIST-byclass.pt",
+        "Model": "model2.CIFAR10.pt",
         "ModelFolder": "F:/m/MLP_learning/app/model",
         "UseCUDA": true
     },

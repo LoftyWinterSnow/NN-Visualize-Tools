@@ -1,4 +1,3 @@
-
 from PySide6.QtCore import Qt, QUrl, QEvent, QThread, QRect
 from PySide6.QtGui import QDesktopServices, QPainter, QPen, QColor, QBrush
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QHBoxLayout, QFrame, QFormLayout, QGridLayout, QSizePolicy, QStackedWidget
@@ -356,7 +355,7 @@ class NNConstruct(Content):
         if self.SaveModel.exec():
             print('Yes button is pressed')
             modelName = self.SaveModel.lineEdit.text()
-            self.model.saveModel(cfg.modelFolder.value + '/' + modelName + '-' + self.dataset.name + '.pt')
+            self.model.saveModel(cfg.modelFolder.value + '/' + modelName + '.' + self.dataset.name + '.pt')
         else:
             print('Cancel button is pressed')
         
@@ -370,5 +369,6 @@ class NNConstruct(Content):
 
     def updateDataset(self, dataset):
         self.dataset = dataset
+        self.inputShape = self.dataset.inputShape
         self.update()
 

@@ -113,7 +113,7 @@ class PaintBoard(QFrame):
         pm = QPixmap(self.width(), self.height())
 
         self.render(pm)
-        image = Image.fromqpixmap(pm).convert('L')
+        image = Image.fromqpixmap(pm)
 
         return image
         # pm.save('test.png', 'png')  # 保存图片
@@ -180,7 +180,7 @@ class NNEvaluate(Content):
         self.predicVal = TitleLabel()
         self.pout = QChartView()
         self.pout.setRenderHint(QPainter.Antialiasing)
-        self.hiddenRes = [ImageLabel(self) for _ in range(6)]
+        self.hiddenRes = [ImageLabel(self) for _ in range(len(self.shapeSeq))]
         self.hiddenLayerCard = WidgetCard(self.tr("Hidden Layer"), self.hiddenRes, stretch=1, gap = 0)
         self.classActivateMapCard = WidgetCard(self.tr("Class Activate Map"), [self.classActivateMap, self.layerChoice], stretch=1, topLayout='V')
         self.outputCard = WidgetCard(self.tr("Output"),[self.predicVal, self.pout], topLayout='V')
@@ -242,7 +242,7 @@ class NNEvaluate(Content):
 
         axisY = QValueAxis()
         axisY.setTitleText(self.tr('Possibility'))
-        #axisY.setRange(0, 1)
+        axisY.setRange(0, 1)
         #axisY.setLabelsVisible(False)
         chart.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         bSeries.attachAxis(axisY)
@@ -272,6 +272,9 @@ class NNEvaluate(Content):
         cmap = plt.get_cmap('rainbow')
         self.model.eval()
         inputImg_ori = self.canvas.getPixmap()
+        if self.dataset.inputShape[0] == 1:
+            inputImg_ori = inputImg_ori.convert("L")
+        
         # if "EMNIST" in self.dataset.name:
         #     inputImg_ori.transpose(Image.FLIP_LEFT_RIGHT).rotate(90)
         inputImg = inputImg_ori.resize(self.dataset.inputShape[1:])
@@ -286,7 +289,7 @@ class NNEvaluate(Content):
         temp = inputImg
         # shapeSeq = [(28, 28), (14, 14), (14, 14), (7, 7), (7, 7), (3, 3)]
 
-        maxHeight = self.dataset.inputShape[1] * 6
+        maxHeight = self.model.inputShape[1] * 6
         for i in range(len(self.shapeSeq)):
             showNum = int(maxHeight/self.shapeSeq[i][0])
             temp = list(self.model.model)[i](torch.as_tensor(temp).type(self.dataType))
@@ -313,7 +316,10 @@ class NNEvaluate(Content):
     
     def handleImportBtnClick(self):
         img = self.dataset.trainData[np.random.randint(0, len(self.dataset.trainData)-1)][0].numpy()
-        img = Image.fromarray((img.reshape(self.dataset.inputShape[1:])*255).astype(np.uint8))
+        if self.dataset.inputShape[0] == 1:
+            img = Image.fromarray((img.reshape(self.dataset.inputShape[1:])*255).astype(np.uint8))
+        else:
+            img = Image.fromarray((img.transpose(1, 2, 0)*255).astype(np.uint8))
         img = img.resize(self.canvas.size().toTuple())
         # if 'EMNIST' in self.dataset.name:
         #     img = img.rotate(-90).transpose(Image.FLIP_LEFT_RIGHT)
@@ -330,12 +336,14 @@ class NNEvaluate(Content):
 
     def updateDataset(self, dataset):
         self.dataset = dataset
+        if self.model.inputShape != self.dataset.inputShape:
+            self.model.inputShape = self.dataset.inputShape
         self.setSubTitle(dataset.name)
-        self.__initBarChart()
-        self.setOutput()
-        self.update()
+
 
     def updateModel(self, model):
+
+        
         self.model = model
         self.model.to(self.device)
         featureMapLayers = self.model.featureMapLayer()
@@ -343,13 +351,20 @@ class NNEvaluate(Content):
             tuple(featureMapLayers[layer]['output_shape'][2:]) for layer in featureMapLayers
         ]
         self.outputList = None
+        self.hiddenRes = [ImageLabel(self) for _ in range(len(self.shapeSeq))]
+        self.hiddenLayerCard.clear()
+        self.hiddenLayerCard.addWidgets(self.hiddenRes)
         self.camLayer = self.model.lastConvLayer()
         self.layerChoice.clear()
         self.layerChoice.addItems([layer for layer in featureMapLayers])
         self.layerChoice.setCurrentIndex(self.camLayer)
-
+    
+    
+        self.__initBarChart()
         self.setOutput()
         self.update()
+        
+
 
 
         

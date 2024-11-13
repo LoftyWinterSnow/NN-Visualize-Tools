@@ -129,17 +129,23 @@ class MainWindow(FluentWindow):
     
     def setDataset(self):
         self.dataset = Datasets(cfg.dataset.value)
-        self.NNEvaluateInterface.updateDataset(self.dataset)
-        self.NNConstructInterface.updateDataset(self.dataset)
         print(self.dataset.classes)
         print(len(self.dataset.classes))
+        self.NNEvaluateInterface.updateDataset(self.dataset)
+        self.NNConstructInterface.updateDataset(self.dataset)
+
 
     def setModel(self, modelPth):
+        cfg.set(cfg.dataset, modelPth.split('.')[-2])
+        cfg.set(cfg.model, modelPth)
+        self.setDataset()
         self.model = NN(self.dataset.inputShape, self.device)
         self.model.loadModel(cfg.modelFolder.value + '/' + modelPth)
-        cfg.set(cfg.model, modelPth)
+        
         self.NNEvaluateInterface.updateModel(self.model)
         self.NNConstructInterface.updateModel(self.model)
+
+        
 
     def setLanguage(self):
         # self.translator.load(f':/GUI/i18n/GUI.{cfg.get(cfg.language).value.name()}.qm')

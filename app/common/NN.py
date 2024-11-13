@@ -178,11 +178,10 @@ class NN:
         self.model = nn.Sequential().to(self.device)
         self.inputShape = inputShape
         
-        
-
-    
     def loadModel(self, modelPth):
         self.model = torch.load(modelPth).to(self.device)
+        self.modelPth = modelPth
+        
 
     def to(self, device):
         self.model.to(device)
@@ -284,6 +283,7 @@ class NN:
 
     def saveModel(self, path):
         torch.save(self.model, path)
+        self.modelPth = path
     
        
     
@@ -320,16 +320,15 @@ def get_cam_mask(model, targetLayer, image) -> np.ndarray:
 
 
 if __name__ == '__main__':
-    
     # 加载MNIST数据集
-    
+
     # train_dataset = torchvision.datasets.MNIST(root='./app/data', train=True, transform=transform, download=True)
     # test_dataset = torchvision.datasets.MNIST(root='./app/data', train=False, transform=transform, download=True)
-    model = NN((1, 28, 28), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-    data = Datasets('EMNIST-byclass')
-    model.loadModel('./app/model/model2.pt')
-    mask = get_cam_mask(model.model, model.model[3], data.trainData[0][0].reshape((1, 1, 28, 28)))
-    print(mask)
+    # model = NN((1, 28, 28), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    # data = Datasets('EMNIST-byclass')
+    # model.loadModel('./app/model/model2.pt')
+    # mask = get_cam_mask(model.model, model.model[3], data.trainData[0][0].reshape((1, 1, 28, 28)))
+    # print(mask)
     # model.model = nn.Sequential(
     #         nn.Conv2d(1, 32, 5, stride=1, padding=2),
     #         nn.MaxPool2d(kernel_size=2),
