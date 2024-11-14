@@ -1,7 +1,9 @@
 app/data/*/
+
 *.pyc
+*.gz
 .vscode/
 out/
-app/model/*
 app/config/config.json
-!app/model/model.MNIST.pt
+# app/model/*
+# !app/model/model.MNIST.pt
