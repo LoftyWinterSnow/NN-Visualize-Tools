@@ -374,36 +374,7 @@ if __name__ == '__main__':
     ).to('cuda')
     #print(model.NNStructure)
     model.train(0.01, 64, 10, data.trainData, data.testData)
-    # model.loadModel('./app/model/model2.pt')
-    # mask = get_cam_mask(model.model, model.model[3], data.trainData[0][0].reshape((1, 1, 28, 28)))
-    # print(mask)
-    # model.model = nn.Sequential(
-    #         nn.Conv2d(1, 32, 5, stride=1, padding=2),
-    #         nn.MaxPool2d(kernel_size=2),
-    #         nn.Conv2d(32, 32, 5, padding=2),
-    #         nn.MaxPool2d(kernel_size=2),
-    #         nn.Conv2d(32, 64, 5, padding=2),
-    #         nn.MaxPool2d(kernel_size=2),
-    #         nn.Flatten(),
-    #         nn.Linear(576, 128),
-    #         nn.ReLU(),
-    #         nn.Linear(128, 64),
-    #         nn.Linear(64, 10),
 
-    # ).to(model.device)
-
-    # 初始化网络并移动到GPU
-    # plot_results(*model.train(
-    #     num_epochs=10, 
-    #     batch_size=128, 
-    #     learning_rate=0.001,
-    #     train_dataset = train_dataset, 
-    #     test_dataset = test_dataset))
-
-    # 保存模型
-    #model.saveModel("./app/model/model2.pt")
-    # 加载模型
-    #model = load_model("./app/model/model.pt")
     
     import code
     code.interact(local=locals())
