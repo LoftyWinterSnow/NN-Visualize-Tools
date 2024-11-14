@@ -38,10 +38,6 @@ class MainWindow(FluentWindow):
     def __init__(self):
         super().__init__()
         self.__initWindow()
-        # create system theme listener
-        # loop = QEventLoop(self)
-        # QTimer.singleShot(3000, loop.quit)
-        # loop.exec()
         self.themeListener = SystemThemeListener(self)
         self.translator = QTranslator()
         self.translator.load(cfg.get(cfg.language).value, 'GUI', '.', ":/GUI/i18n")
@@ -136,9 +132,11 @@ class MainWindow(FluentWindow):
 
 
     def setModel(self, modelPth):
-        cfg.set(cfg.dataset, modelPth.split('.')[-2])
+        datasetName = modelPth.split('.')[-2]
+        if datasetName != cfg.dataset.value:
+            cfg.set(cfg.dataset, datasetName)
+            self.setDataset()
         cfg.set(cfg.model, modelPth)
-        self.setDataset()
         self.model = NN(self.dataset.inputShape, self.device)
         self.model.loadModel(cfg.modelFolder.value + '/' + modelPth)
         

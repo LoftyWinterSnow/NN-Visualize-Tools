@@ -140,10 +140,10 @@ class NNEvaluate(Content):
             parent=parent
         )
         self._parent = parent
-        self.modelsPth = filter(
+        self.modelsPth = list(filter(
             lambda x : x.endswith('.pt'),
             next(os.walk(cfg.modelFolder.value))[-1]
-        )
+        ))
         self.device = parent.device
         self.dataType = parent.dataType
         self.dataset : Datasets = parent.dataset
@@ -172,7 +172,7 @@ class NNEvaluate(Content):
         
         self.modelChoose = ComboBox(self)
         self.modelChoose.addItems(self.modelsPth)
-        self.modelChoose.setCurrentIndex(0)
+        self.modelChoose.setCurrentIndex(self.modelsPth.index(cfg.model.value))
         self.importBtn = PushButton(self.tr('Import'), self)
         self.convResult = ImageLabel(self)
         self.maxPoolResult = ImageLabel(self)
@@ -290,15 +290,15 @@ class NNEvaluate(Content):
         # shapeSeq = [(28, 28), (14, 14), (14, 14), (7, 7), (7, 7), (3, 3)]
 
         maxHeight = self.model.inputShape[1] * 6
-        for i in range(len(self.shapeSeq)):
-            showNum = int(maxHeight/self.shapeSeq[i][0])
-            temp = list(self.model.model)[i](torch.as_tensor(temp).type(self.dataType))
-            outputImg = temp.cpu().detach().numpy()
-            outputImg = cmap(outputImg[:showNum].reshape((self.shapeSeq[i][0]*showNum, self.shapeSeq[i][1])))
-            outputImg = Image.fromarray((outputImg * 255).astype(np.uint8))
-            w, h = outputImg.size
-            outputImg = outputImg.resize((int(w*2), int(h*2)))
-            self.hiddenRes[i].setPixmap(ImageQt.toqpixmap(outputImg))
+        # for i in range(len(self.shapeSeq)):
+        #     showNum = int(maxHeight/self.shapeSeq[i][0])
+        #     temp = list(self.model.model)[i](torch.as_tensor(temp).type(self.dataType))
+        #     outputImg = temp.cpu().detach().numpy()
+        #     outputImg = cmap(outputImg[:showNum].reshape((self.shapeSeq[i][0]*showNum, self.shapeSeq[i][1])))
+        #     outputImg = Image.fromarray((outputImg * 255).astype(np.uint8))
+        #     w, h = outputImg.size
+        #     outputImg = outputImg.resize((int(w*2), int(h*2)))
+        #     self.hiddenRes[i].setPixmap(ImageQt.toqpixmap(outputImg))
 
         inpt = inputImg_ori.resize(self.dataset.inputShape[1:])
         inpt = np.array(inpt).reshape((1, *self.dataset.inputShape)) / 255.
@@ -354,11 +354,11 @@ class NNEvaluate(Content):
         self.hiddenRes = [ImageLabel(self) for _ in range(len(self.shapeSeq))]
         self.hiddenLayerCard.clear()
         self.hiddenLayerCard.addWidgets(self.hiddenRes)
-        self.camLayer = self.model.lastConvLayer()
+        
         self.layerChoice.clear()
         self.layerChoice.addItems([layer for layer in featureMapLayers])
-        self.layerChoice.setCurrentIndex(self.camLayer)
-    
+        self.camLayer = self.model.lastConvLayer()
+        self.layerChoice.setCurrentIndex(self.camLayer)    
     
         self.__initBarChart()
         self.setOutput()

@@ -14,7 +14,10 @@ class WorkerThread(QThread):
         # 检查函数和参数是否存在
         if self.function is not None:
             if self.args is None:
-                self.function()
-            else:
-                self.function(*self.args)
+                res = self.function()
+            elif isinstance(self.args, tuple):
+                res = self.function(*self.args)
+            elif isinstance(self.args, dict):
+                res = self.function(**self.args)
             self.finished.emit()
+        return res

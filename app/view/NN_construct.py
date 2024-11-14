@@ -11,6 +11,8 @@ from app.view.content_widgets import Content
 from app.common.config import cfg
 from collections import OrderedDict
 import torch.nn as nn
+from app.common.thread import WorkerThread
+from copy import deepcopy
 class LayerSetting(QWidget):
     def __init__(self, layerType: str, parent = None):
         super().__init__(parent)
@@ -36,6 +38,8 @@ class LayerSetting(QWidget):
                 self.formLayout.addRow(self.kargsMap[parameter], self.formData[parameter])
         elif self.layerType == 'Flatten':
             pass
+        elif self.layerType == 'ReLU':
+            pass
         elif self.layerType == 'Linear':
             parameters = ['out_features']
             self.formData = dict(zip(parameters, [LineEdit(self) for _ in range(len(parameters))]))
@@ -54,7 +58,6 @@ class LayerSetting(QWidget):
         except:
             return None
         
-
 class LayerChoose(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
@@ -66,12 +69,15 @@ class LayerChoose(QWidget):
         self.MaxPool2dInterface = LayerSetting('MaxPool2d', self)
         self.FlattenInterface = LayerSetting('Flatten', self)
         self.LinearInterface = LayerSetting('Linear', self)
+        self.ReLUInterface = LayerSetting('ReLU', self)
 
         # 添加标签页
         self.addSubInterface(self.Conv2dInterface, 'Conv2dInterface', 'Conv2d')
         self.addSubInterface(self.MaxPool2dInterface, 'MaxPool2dInterface', 'MaxPool2d')
         self.addSubInterface(self.FlattenInterface, 'FlattenInterface', 'Flatten')
         self.addSubInterface(self.LinearInterface, 'LinearInterface', 'Linear')
+        self.addSubInterface(self.ReLUInterface, 'ReLUInterface', 'ReLU')
+
 
         # 连接信号并初始化当前标签页
         self.stackedWidget.currentChanged.connect(self.onCurrentIndexChanged)
@@ -133,8 +139,7 @@ class ShowNNStructre(QFrame):
 
         self.nnStructure = nnStructure
         qconfig.themeChanged.connect(self.changeTextColor)
-    def drawSquare(self, painter : QPainter, x, y, width, color : QColor, borderColor : QColor = Qt.black, borderWidth = 1):
-        qconfig.themeChanged.connect(self.changeTextColor)
+        
     def paintEvent(self, event):
         painter = QPainter(self)
         
@@ -181,7 +186,8 @@ class ShowNNStructre(QFrame):
 
 
     def drawNN(self, painter : QPainter, model: OrderedDict):
-        layers = [i for i in model if 'ReLU' not in i]
+        layersWithActivation = list(model.keys())
+        layers = list(filter(lambda x: ('ReLU' not in x) and ('BatchNorm2d' not in x), layersWithActivation))
         sectionWidth = self.parent().width() / (len(layers) + 2.5)
         x = 0
         y = 50
@@ -204,10 +210,18 @@ class ShowNNStructre(QFrame):
                     convLayerConnections.append([endx, endy, width, 'Input'])
                 x += sectionWidth + 5
             painter.setPen(QPen(self.textColor, 2))
+
             if section == len(layers) -1 :
-                painter.drawText(QRect(x, 0, sectionWidth, 50), Qt.AlignCenter, 'Output' + '\n' + str(model[layer]['output_shape'][1:]))
+                text = 'Output' + '\n' + str(model[layer]['output_shape'][1:])
             else:
-                painter.drawText(QRect(x, 0, sectionWidth, 50), Qt.AlignCenter, translate[layer.split('-')[0]] + '\n' + str(model[layer]['output_shape'][1:]))
+                text = translate[layer.split('-')[0]] + '\n' + str(model[layer]['output_shape'][1:])
+                
+            try:
+                if 'ReLU' in layersWithActivation[int(layer.split('-')[-1])]:
+                    text += ' ' + 'ReLU'
+            except:
+                pass
+            painter.drawText(QRect(x, 0, sectionWidth, 50), Qt.AlignCenter, text)
             # w + (L-1) * g = W
             # g = (W-w)/(L-1)
             layerNum = model[layer]['output_shape'][1]
@@ -246,11 +260,6 @@ class ShowNNStructre(QFrame):
     def updateStructure(self, structure):
         self.nnStructure = structure
          
-        
-
-        
-    
-
 
 class NNConstruct(Content):
     """ Text interface """
@@ -304,7 +313,14 @@ class NNConstruct(Content):
         self.trainBtn.clicked.connect(self.trainModel)
         self.saveBtn.clicked.connect(self.saveModel)
         
+    def startThread(self, func, args = None):
+        self.work = WorkerThread(function=func, args=args)
 
+        self.work.start()
+        self.work.finished.connect(self.threadFinished)
+
+    def threadFinished(self):
+        print("done!")
     
     def addLayer(self):
         self.AddLayer = AddLayer(parent=self)
@@ -342,13 +358,20 @@ class NNConstruct(Content):
         self.canvas.updateStructure(OrderedDict())
 
     def trainModel(self):
-        self.model.train(
-            learning_rate=0.001,
-            batch_size=64,
-            num_epochs=5,
-            train_dataset=self.dataset.trainData,
-            test_dataset=self.dataset.testData
-        )
+        self.startThread(func = self.model.train, args = {
+            'learning_rate': 0.001,
+            'batch_size': 64,
+            'num_epochs': 5,
+            'train_dataset': deepcopy(self.dataset.trainData),
+            'test_dataset': deepcopy(self.dataset.testData)
+        })
+        # self.model.train(
+        #     learning_rate=0.01,
+        #     batch_size=64,
+        #     num_epochs=5,
+        #     train_dataset=self.dataset.trainData,
+        #     test_dataset=self.dataset.testData
+        # )
 
     def saveModel(self):
         self.SaveModel = SaveModel(parent=self)

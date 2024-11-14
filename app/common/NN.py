@@ -200,9 +200,11 @@ class NN:
     def lastConvLayer(self) -> int:
         convLayerIndex = -1
         structure = self.NNStructure
+        
         for i, layer  in enumerate(structure.keys()):
             if "Conv" in layer:
                 convLayerIndex = i
+        print(convLayerIndex)
         return convLayerIndex
     
     def featureMapLayer(self) -> OrderedDict:
@@ -225,7 +227,14 @@ class NN:
         else:
             return None
 
-    def train(self, learning_rate : float, batch_size : int, num_epochs : int, train_dataset, test_dataset, criterion = nn.CrossEntropyLoss()):
+    def train(self, 
+              learning_rate : float, 
+              batch_size : int, 
+              num_epochs : int, 
+              train_dataset, 
+              test_dataset, 
+              criterion = nn.CrossEntropyLoss(),
+              teststep = 100):
         optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
         test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
@@ -251,33 +260,30 @@ class NN:
                     loss.backward()
                     optimizer.step()
 
-                    # 每100个step记录一次损失和准确率
-                    # if (i+1) % 100 == 0:
-                    #     # 在测试集上计算准确率
-                    #     with torch.no_grad():
-                    #         correct = 0
-                    #         total = 0
-                    #         for images, labels in test_loader:
-                    #             # 将数据和标签移动到GPU
-                    #             images = images.to(self.device)
-                    #             labels = labels.to(self.device)
+                    if (i+1) % teststep == 0:
+                        # 在测试集上计算准确率
+                        with torch.no_grad():
+                            correct = 0
+                            total = 0
+                            for images, labels in test_loader:
+                                # 将数据和标签移动到GPU
+                                images = images.to(self.device)
+                                labels = labels.to(self.device)
 
-                    #             outputs = self.model(images)
-                    #             _, predicted = torch.max(outputs.data, 1)
-                    #             total += labels.size(0)
-                    #             correct += (predicted == labels).sum().item()
+                                outputs = self.model(images)
+                                _, predicted = torch.max(outputs.data, 1)
+                                total += labels.size(0)
+                                correct += (predicted == labels).sum().item()
 
-                    #         test_accuracy = correct / total
-                    #         train_losses.append(loss.item())
-                    #         test_accuracies.append(test_accuracy)
+                            test_accuracy = correct / total
+                            train_losses.append(loss.item())
+                            test_accuracies.append(test_accuracy)
 
-                    #     # 计算训练时间
-                    #     elapsed_time = time.time() - start_time
+                        # 计算训练时间
+                        elapsed_time = time.time() - start_time
 
-                    #     t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
+                        t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
 
-        # 保存模型
-        #torch.save(model, './app/model/model.pt')
 
         return train_losses, test_accuracies
 
@@ -315,6 +321,7 @@ def plot_results(train_losses, test_accuracies):
 
 def get_cam_mask(model, targetLayer, image) -> np.ndarray:
     cam = GradCAM(model, [targetLayer])
+    
     mask = cam(image)
     return mask
 
@@ -324,8 +331,49 @@ if __name__ == '__main__':
 
     # train_dataset = torchvision.datasets.MNIST(root='./app/data', train=True, transform=transform, download=True)
     # test_dataset = torchvision.datasets.MNIST(root='./app/data', train=False, transform=transform, download=True)
-    # model = NN((1, 28, 28), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-    # data = Datasets('EMNIST-byclass')
+    model = NN((3, 32, 32), torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    data = Datasets('CIFAR10')
+    model.model = nn.Sequential(
+        nn.Conv2d(3,64,3,padding=1),
+        nn.Conv2d(64,64,3,padding=1),
+        nn.MaxPool2d(2, 2),
+        nn.BatchNorm2d(64),
+        nn.ReLU(),
+
+        nn.Conv2d(64,128,3,padding=1),
+        nn.Conv2d(128, 128, 3,padding=1),
+
+        nn.MaxPool2d(2, 2, padding=1),
+        nn.BatchNorm2d(128),
+        nn.ReLU(),
+
+        nn.Conv2d(128,128, 3,padding=1),
+        nn.Conv2d(128, 128, 3,padding=1),
+        nn.Conv2d(128, 128, 1,padding=1),
+        nn.MaxPool2d(2, 2, padding=1),
+        nn.BatchNorm2d(128),
+        nn.ReLU(),
+
+        nn.Conv2d(128, 256, 3,padding=1),
+        nn.Conv2d(256, 256, 3, padding=1),
+        nn.Conv2d(256, 256, 1, padding=1),
+        nn.MaxPool2d(2, 2, padding=1),
+        nn.BatchNorm2d(256),
+        nn.ReLU(),
+
+        nn.Conv2d(256, 512, 3, padding=1),
+        nn.MaxPool2d(2, 2, padding=1),
+        nn.BatchNorm2d(512),
+        nn.ReLU(),
+
+        nn.Flatten(),
+        nn.Linear(512*3*3, 512),
+        nn.ReLU(),
+        nn.Linear(512, 10)
+
+    ).to('cuda')
+    #print(model.NNStructure)
+    model.train(0.01, 64, 10, data.trainData, data.testData)
     # model.loadModel('./app/model/model2.pt')
     # mask = get_cam_mask(model.model, model.model[3], data.trainData[0][0].reshape((1, 1, 28, 28)))
     # print(mask)
