@@ -4,7 +4,7 @@
         "DpiScale": "Auto",
         "Language": "zh_CN",
         "MicaEnabled": true,
-        "Model": "model2.CIFAR10.pt",
+        "Model": "model.CIFAR10.pt",
         "ModelFolder": "F:/m/MLP_learning/app/model",
         "UseCUDA": true
     },
