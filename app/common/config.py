@@ -52,9 +52,9 @@ class MyConfig(QConfig):
         "MainWindow", "DpiScale", "Auto", OptionsValidator([1, 1.25, 1.5, 1.75, 2, "Auto"]), restart=True)
     language = OptionsConfigItem(
         "MainWindow", "Language", Language.AUTO, OptionsValidator(Language), LanguageSerializer(), restart=True)
-    modelFolder = ConfigItem("MainWindow", "ModelFolder", rf"/app/model", FolderValidator())
+    modelFolder = ConfigItem("MainWindow", "ModelFolder", rf"./app/model", FolderValidator())
 
-    model = ConfigItem("MainWindow", "Model", 'model.pt')
+    model = ConfigItem("MainWindow", "Model", 'model.MNIST.pt')
     # TODO: 增加没有找到任何模型时候的解决方案
 
 

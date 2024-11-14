@@ -2,3 +2,6 @@ app/data/*/
 *.pyc
 .vscode/
 out/
+app/model/*
+app/config/config.json
+!app/model/model.MNIST.pt
