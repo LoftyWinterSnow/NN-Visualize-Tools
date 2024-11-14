@@ -270,19 +270,19 @@ class NN:
                                 images = images.to(self.device)
                                 labels = labels.to(self.device)
 
-                                outputs = self.model(images)
-                                _, predicted = torch.max(outputs.data, 1)
-                                total += labels.size(0)
-                                correct += (predicted == labels).sum().item()
+                    #             outputs = self.model(images)
+                    #             _, predicted = torch.max(outputs.data, 1)
+                    #             total += labels.size(0)
+                    #             correct += (predicted == labels).sum().item()
 
-                            test_accuracy = correct / total
-                            train_losses.append(loss.item())
-                            test_accuracies.append(test_accuracy)
+                    #         test_accuracy = correct / total
+                    #         train_losses.append(loss.item())
+                    #         test_accuracies.append(test_accuracy)
 
-                        # 计算训练时间
-                        elapsed_time = time.time() - start_time
+                    #     # 计算训练时间
+                    #     elapsed_time = time.time() - start_time
 
-                        t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
+                    #     t.set_postfix_str(f'Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.4f}, TestAccuracy: {test_accuracy:.2%}, Time: {elapsed_time:.2f}s')
 
 
         return train_losses, test_accuracies

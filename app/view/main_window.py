@@ -130,7 +130,6 @@ class MainWindow(FluentWindow):
         self.NNEvaluateInterface.updateDataset(self.dataset)
         self.NNConstructInterface.updateDataset(self.dataset)
 
-
     def setModel(self, modelPth):
         datasetName = modelPth.split('.')[-2]
         if datasetName != cfg.dataset.value:

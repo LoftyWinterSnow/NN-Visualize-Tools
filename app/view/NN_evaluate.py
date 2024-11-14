@@ -242,7 +242,7 @@ class NNEvaluate(Content):
 
         axisY = QValueAxis()
         axisY.setTitleText(self.tr('Possibility'))
-        axisY.setRange(0, 1)
+        #axisY.setRange(0, 1)
         #axisY.setLabelsVisible(False)
         chart.addAxis(axisY, Qt.AlignmentFlag.AlignLeft)
         bSeries.attachAxis(axisY)
